@@ -4,12 +4,14 @@ import Modal from 'react-bootstrap/Modal';
 import Col from 'react-bootstrap/Col';
 import Form from 'react-bootstrap/Form';
 import Row from 'react-bootstrap/Row';
+import axios from "axios";
 
 function CustomModal({
   show,
   setShow,
   formData,
-  setFormData
+  setFormData,
+  getUser
 }) {
   // const [formData, setFormData] = useState({
   //   name: '',
@@ -17,13 +19,58 @@ function CustomModal({
   //   phone: '',
   // });
 
-  const handleClose = () => setShow(false);
+  const handleClose = () => {
+    setShow(false);
+    setFormData({});
+  };
   const handleShow = () => setShow(true);
 
-  console.log("setFormData", setFormData);
+  console.log("formData", formData);
 
   const handleSubmit = () => {
     console.log("formData", formData);
+
+    axios({
+      // Endpoint to send files
+      url: "http://localhost:5000/user",
+      method: "POST",
+      data: formData,
+    })
+    .then((res) => {
+      console.log("res", res);
+      if(res.status === 200) {
+        alert("Data save successfully");
+        setShow(false);
+        setFormData({});
+        getUser();
+      }
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+  }
+
+  const handleUpdate = async() => {
+    let url = `http://localhost:5000/user/${formData?._id}`;
+
+    axios({
+      // Endpoint to send files
+      url: url,
+      method: "POST",
+      data: formData,
+    })
+    .then((res) => {
+      console.log("update response", res);
+      if(res.status === 200) {
+        alert("Update successfully");
+        setShow(false);
+        setFormData({});
+        getUser();
+      }
+    })
+    .catch((err) => {
+      console.log(err);
+    });
   }
 
   return (
@@ -31,7 +78,12 @@ function CustomModal({
 
       <Modal show={show} onHide={handleClose}>
         <Modal.Header closeButton>
-          <Modal.Title>Modal heading</Modal.Title>
+          {
+            formData?._id ? 
+            <Modal.Title>Update User</Modal.Title>
+            : <Modal.Title>Add User</Modal.Title>
+          }
+          {/* <Modal.Title>Modal heading</Modal.Title> */}
         </Modal.Header>
         <Modal.Body>
           <Form>
@@ -76,9 +128,17 @@ function CustomModal({
           <Button variant="secondary" onClick={handleClose}>
             Close
           </Button>
-          <Button variant="primary" onClick={handleSubmit}>
-            Save
-          </Button>
+          {
+            formData?._id ?  
+              <Button variant="primary" onClick={handleUpdate}>
+                Update
+              </Button> 
+            : 
+            <Button variant="primary" onClick={handleSubmit}>
+              Save
+            </Button>
+          }
+         
         </Modal.Footer>
       </Modal>
     </>
