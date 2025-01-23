@@ -1,15 +1,32 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import DataTable from "../components/Datatable";
 import DashboardLayout from "../components/HOC/DashboardLayout";
 import { CDBCard, CDBCardBody, CDBDataTable, CDBContainer } from 'cdbreact';
 import CustomModal from "../components/CustomModal";
 import { Button } from "react-bootstrap";
+import axios from "axios";
 
 const Home = () => {
 
     const [show, setShow] = useState(false);
+    const [tableData, setTableData] = useState([]);
     const [formData, setFormData] = useState({});
     // const [updateFormdata, setUpdateFormdata] = useState({});
+
+
+    useEffect(() => {
+        getUser();
+    }, []);
+
+    const getUser = async () => {
+        await axios
+            .get("http://localhost:5000/user")
+            .then(res => {
+                setTableData(res?.data?.data);
+            })
+            .catch(error => console.log(error));
+    };
+
 
     function testClickEvent(param) {
         alert('Row Click Event');
@@ -36,15 +53,23 @@ const Home = () => {
         },
     ];
 
+
+
+    const handleDeleteUser = async (item) => {
+        axios.delete("http://localhost:5000/user/"+item?._id).then((res) => {
+            getUser();
+        }); 
+    };
+
     const handleEdit = (item) => {
-        console.log("item", item);
-        setUpdateFormdata(item);
+        console.log("edit item", item);
+        setFormData(item);
         setShow(true);
     };
+
+    console.log("formData", formData);
     
-    const handleDelete = (item) => {
-    alert(`Deleting item: ${item.name}`);
-    };
+    
 
     const data = () => {
         return {
@@ -76,19 +101,22 @@ const Home = () => {
 
                     getActions: (data) => {
                         return (
-                            Edit | Delete
+                            <>
+                                <button>Edit</button>
+                                <button>Delete</button>
+                            </>
                         )
                     }
 
                 }
             ],
             
-            rows: items.map((item) => ({
+            rows: tableData.map((item) => ({
                 ...item,
                 actions: (
                     <>
                     <button onClick={() => handleEdit(item)}>Edit</button>
-                    <button>Delete</button>
+                    <button onClick={() => handleDeleteUser(item)}>Delete</button>
                     </>
                 )
             }))
@@ -109,6 +137,7 @@ const Home = () => {
                 setShow={setShow}
                 formData={formData}
                 setFormData={setFormData}
+                getUser={getUser}
             />
             <div className="">
                 <DataTable
